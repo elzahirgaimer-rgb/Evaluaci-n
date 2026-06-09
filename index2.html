@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Optimización de Rutas | Last-Mile Delivery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --card2: #1e293b;
+      --primary: #38bdf8;
+      --secondary: #22c55e;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .title h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .title p {
+      color: var(--muted);
+      max-width: 700px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 16px 22px;
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      min-width: 160px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card h3 {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-card span {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 25px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+select,
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  color: black;
+  outline: none;
+  transition: 0.3s;
+}
+    select:focus,
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(56,189,248,0.15);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #0ea5e9);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+    }
+
+    .map-panel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-container {
+      background: linear-gradient(135deg, #111827, #1e293b);
+      border-radius: 20px;
+      position: relative;
+      height: 700px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .legend {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .results {
+      margin-top: 25px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .results h3 {
+      margin-bottom: 15px;
+    }
+
+    .route-step {
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      background: rgba(34,197,94,0.15);
+      color: #4ade80;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media(max-width: 1100px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .map-container {
+        height: 600px;
+      }
+    }
+
+    @media(max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      .title h1 {
+        font-size: 1.7rem;
+      }
+
+      .map-container {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <div class="title">
+        <h1>🚚 Sistema de Optimización de Rutas</h1>
+        <p>
+          Plataforma de logística local para optimizar entregas de última milla utilizando
+          <strong>Grafos</strong>, <strong>Colas de Prioridad (Heap)</strong> y el
+          <strong>Algoritmo de Dijkstra</strong>.
+        </p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <h3>Nodos</h3>
+          <span id="nodesCount">0</span>
+        </div>
+
+        <div class="stat-card">
+          <h3>Calles</h3>
+          <span id="edgesCount">0</span>
+        </div>
+
+        <div class="stat-card">
+          <h3>Distancia</h3>
+          <span id="distanceResult">0 km</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- PANEL DE CONTROL -->
+      <div class="panel">
+
+        <h2>⚙️ Configuración de Ruta</h2>
+
+        <div class="form-group">
+          <label>Origen</label>
+          <select id="startNode"></select>
+        </div>
+
+        <div class="form-group">
+          <label>Destino</label>
+          <select id="endNode"></select>
+        </div>
+
+        <button class="btn-primary" onclick="calculateRoute()">
+          Calcular Ruta Óptima
+        </button>
+
+        <button class="btn-danger" onclick="resetClosedRoads()">
+          Restablecer Calles Cerradas
+        </button>
+
+        <div class="results">
+          <h3>📍 Resultado</h3>
+          <div id="routeOutput">
+            Selecciona un origen y un destino.
+          </div>
+        </div>
+
+        <div class="footer">
+          <strong>Estructuras utilizadas:</strong>
+          <ul style="margin-top:10px;padding-left:20px;">
+            <li>Grafo mediante Lista de Adyacencia</li>
+            <li>Priority Queue (Min Heap)</li>
+            <li>Hash Maps para indexación rápida</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- MAPA -->
+      <div class="panel map-panel">
+
+        <h2>🗺️ Red de Entregas</h2>
+
+        <div class="map-container">
+          <svg id="map"></svg>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background:#38bdf8;"></div>
+            Ruta Óptima
+          </div>
+
+          <div class="legend-item">
+            <div class="legend-color" style="background:#22c55e;"></div>
+            Nodo Activo
+          </div>
+
+          <div class="legend-item">
+            <div class="legend-color" style="background:#ef4444;"></div>
+            Calle Cerrada
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /***************************************************************
+     * SISTEMA DE OPTIMIZACIÓN DE RUTAS
+     * -------------------------------------------------------------
+     * Este proyecto implementa:
+     *
+     * 1. GRAFOS (Lista de Adyacencia)
+     * 2. COLAS DE PRIORIDAD (Min Heap)
+     * 3. HASH MAPS (Diccionarios)
+     * 4. ALGORITMO DE DIJKSTRA
+     *
+     ***************************************************************/
+
+    /***************************************************************
+     * HASH MAP
+     * -------------------------------------------------------------
+     * Se utiliza un diccionario (objeto JS) para mapear rápidamente
+     * los nombres de direcciones a sus nodos correspondientes.
+     *
+     * Complejidad promedio:
+     * O(1) acceso.
+     ***************************************************************/
+
+    const locations = {
+      "Centro": { x: 120, y: 120 },
+      "Norte": { x: 320, y: 80 },
+      "Sur": { x: 300, y: 450 },
+      "Este": { x: 600, y: 220 },
+      "Oeste": { x: 80, y: 350 },
+      "Aeropuerto": { x: 760, y: 500 },
+      "Industrial": { x: 520, y: 400 },
+      "Universidad": { x: 430, y: 250 },
+      "Hospital": { x: 220, y: 250 },
+      "Plaza": { x: 650, y: 100 }
+    };
+
+    /***************************************************************
+     * GRAFO - LISTA DE ADYACENCIA
+     * -------------------------------------------------------------
+     * Cada nodo contiene una lista de conexiones.
+     *
+     * Estructura:
+     * grafo[nodo] = [
+     *   { node: destino, weight: distancia, closed: bool }
+     * ]
+     *
+     * Ventaja:
+     * Muy eficiente en memoria para grafos dispersos.
+     ***************************************************************/
+
+    const graph = {
+      "Centro": [
+        { node: "Norte", weight: 4, closed: false },
+        { node: "Hospital", weight: 3, closed: false },
+        { node: "Oeste", weight: 5, closed: false }
+      ],
+
+      "Norte": [
+        { node: "Centro", weight: 4, closed: false },
+        { node: "Plaza", weight: 6, closed: false },
+        { node: "Universidad", weight: 5, closed: false }
+      ],
+
+      "Sur": [
+        { node: "Hospital", weight: 5, closed: false },
+        { node: "Industrial", weight: 4, closed: false },
+        { node: "Oeste", weight: 6, closed: false }
+      ],
+
+      "Este": [
+        { node: "Universidad", weight: 3, closed: false },
+        { node: "Industrial", weight: 4, closed: false },
+        { node: "Plaza", weight: 3, closed: false }
+      ],
+
+      "Oeste": [
+        { node: "Centro", weight: 5, closed: false },
+        { node: "Hospital", weight: 4, closed: false },
+        { node: "Sur", weight: 6, closed: false }
+      ],
+
+      "Aeropuerto": [
+        { node: "Industrial", weight: 5, closed: false },
+        { node: "Plaza", weight: 8, closed: false }
+      ],
+
+      "Industrial": [
+        { node: "Sur", weight: 4, closed: false },
+        { node: "Este", weight: 4, closed: false },
+        { node: "Aeropuerto", weight: 5, closed: false }
+      ],
+
+      "Universidad": [
+        { node: "Norte", weight: 5, closed: false },
+        { node: "Hospital", weight: 3, closed: false },
+        { node: "Este", weight: 3, closed: false }
+      ],
+
+      "Hospital": [
+        { node: "Centro", weight: 3, closed: false },
+        { node: "Oeste", weight: 4, closed: false },
+        { node: "Universidad", weight: 3, closed: false },
+        { node: "Sur", weight: 5, closed: false }
+      ],
+
+      "Plaza": [
+        { node: "Norte", weight: 6, closed: false },
+        { node: "Este", weight: 3, closed: false },
+        { node: "Aeropuerto", weight: 8, closed: false }
+      ]
+    };
+
+    /***************************************************************
+     * PRIORITY QUEUE (MIN HEAP)
+     * -------------------------------------------------------------
+     * Estructura fundamental para Dijkstra.
+     *
+     * Permite extraer SIEMPRE el nodo con menor costo
+     * acumulado en O(log n).
+     ***************************************************************/
+
+    class PriorityQueue {
+      constructor() {
+        this.values = [];
+      }
+
+      enqueue(node, priority) {
+        this.values.push({ node, priority });
+        this.sort();
+      }
+
+      dequeue() {
+        return this.values.shift();
+      }
+
+      sort() {
+        this.values.sort((a, b) => a.priority - b.priority);
+      }
+
+      isEmpty() {
+        return this.values.length === 0;
+      }
+    }
+
+    /***************************************************************
+     * ALGORITMO DE DIJKSTRA
+     * -------------------------------------------------------------
+     * Encuentra la ruta más corta desde un nodo origen
+     * hacia un destino.
+     *
+     * Complejidad:
+     * O(E log V)
+     *
+     * Donde:
+     * E = aristas
+     * V = vértices
+     ***************************************************************/
+
+    function dijkstra(start, end) {
+
+      const distances = {};
+      const previous = {};
+      const pq = new PriorityQueue();
+
+      // Inicialización
+      for (let vertex in graph) {
+        distances[vertex] = Infinity;
+        previous[vertex] = null;
+      }
+
+      distances[start] = 0;
+      pq.enqueue(start, 0);
+
+      while (!pq.isEmpty()) {
+
+        const currentNode = pq.dequeue().node;
+
+        if (currentNode === end) break;
+
+        for (const neighbor of graph[currentNode]) {
+
+          // Ignorar calles cerradas
+          if (neighbor.closed) continue;
+
+          const distance =
+            distances[currentNode] + neighbor.weight;
+
+          if (distance < distances[neighbor.node]) {
+
+            distances[neighbor.node] = distance;
+            previous[neighbor.node] = currentNode;
+
+            pq.enqueue(neighbor.node, distance);
+          }
+        }
+      }
+
+      // Reconstrucción de ruta
+      const path = [];
+      let current = end;
+
+      while (current) {
+        path.unshift(current);
+        current = previous[current];
+      }
+
+      return {
+        distance: distances[end],
+        path
+      };
+    }
+
+    /***************************************************************
+     * SVG MAP RENDER
+     ***************************************************************/
+
+    const svg = document.getElementById("map");
+
+    function renderMap(route = []) {
+
+      svg.innerHTML = "";
+
+      // Dibujar calles
+      for (const node in graph) {
+
+        const origin = locations[node];
+
+        graph[node].forEach(edge => {
+
+          const destination = locations[edge.node];
+
+          const isRoute =
+            route.includes(node) &&
+            route.includes(edge.node);
+
+          const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+
+          line.setAttribute("x1", origin.x);
+          line.setAttribute("y1", origin.y);
+          line.setAttribute("x2", destination.x);
+          line.setAttribute("y2", destination.y);
+
+          line.setAttribute(
+            "stroke",
+            edge.closed
+              ? "#ef4444"
+              : isRoute
+              ? "#38bdf8"
+              : "rgba(255,255,255,0.2)"
+          );
+
+          line.setAttribute(
+            "stroke-width",
+            isRoute ? "5" : "3"
+          );
+
+          line.style.cursor = "pointer";
+
+          /*****************************************************
+           * Simulación de calle cerrada
+           * Al hacer click se bloquea la calle.
+           *****************************************************/
+
+          line.addEventListener("click", () => {
+            edge.closed = !edge.closed;
+
+            // Reflejar cambio bidireccional
+            const reverseEdge = graph[edge.node].find(
+              e => e.node === node
+            );
+
+            if (reverseEdge) {
+              reverseEdge.closed = edge.closed;
+            }
+
+            renderMap(route);
+          });
+
+          svg.appendChild(line);
+        });
+      }
+
+      // Dibujar nodos
+      for (const node in locations) {
+
+        const point = locations[node];
+
+        const circle = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+
+        circle.setAttribute("cx", point.x);
+        circle.setAttribute("cy", point.y);
+        circle.setAttribute("r", "18");
+
+        circle.setAttribute(
+          "fill",
+          route.includes(node)
+            ? "#22c55e"
+            : "#1e293b"
+        );
+
+        circle.setAttribute("stroke", "#38bdf8");
+        circle.setAttribute("stroke-width", "3");
+
+        svg.appendChild(circle);
+
+        // Texto
+        const text = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text"
+        );
+
+        text.setAttribute("x", point.x);
+        text.setAttribute("y", point.y + 5);
+
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-size", "12");
+        text.setAttribute("text-anchor", "middle");
+
+        text.textContent = node;
+
+        svg.appendChild(text);
+      }
+    }
+
+    /***************************************************************
+     * CALCULAR RUTA
+     ***************************************************************/
+
+    function calculateRoute() {
+
+      const start = document.getElementById("startNode").value;
+      const end = document.getElementById("endNode").value;
+
+      if (start === end) {
+        alert("El origen y destino deben ser diferentes.");
+        return;
+      }
+
+      const result = dijkstra(start, end);
+
+      renderMap(result.path);
+
+      document.getElementById("distanceResult").textContent =
+        result.distance + " km";
+
+      const output = document.getElementById("routeOutput");
+
+      output.innerHTML = `
+        <div class="route-step">
+          <strong>Ruta encontrada</strong>
+          <span class="badge">${result.distance} km</span>
+        </div>
+
+        ${result.path.map((step, index) => `
+          <div class="route-step">
+            <span>
+              ${index + 1}. ${step}
+            </span>
+          </div>
+        `).join("")}
+      `;
+    }
+
+    /***************************************************************
+     * RESETEAR CALLES
+     ***************************************************************/
+
+    function resetClosedRoads() {
+
+      for (const node in graph) {
+        graph[node].forEach(edge => {
+          edge.closed = false;
+        });
+      }
+
+      renderMap();
+
+      document.getElementById("routeOutput").innerHTML =
+        "Todas las calles han sido restablecidas.";
+    }
+
+    /***************************************************************
+     * INICIALIZACIÓN
+     ***************************************************************/
+
+    function init() {
+
+      const startSelect =
+        document.getElementById("startNode");
+
+      const endSelect =
+        document.getElementById("endNode");
+
+      Object.keys(locations).forEach(location => {
+
+        const option1 = document.createElement("option");
+        option1.value = location;
+        option1.textContent = location;
+
+        const option2 = document.createElement("option");
+        option2.value = location;
+        option2.textContent = location;
+
+        startSelect.appendChild(option1);
+        endSelect.appendChild(option2);
+      });
+
+      startSelect.value = "Centro";
+      endSelect.value = "Aeropuerto";
+
+      // Estadísticas
+      document.getElementById("nodesCount").textContent =
+        Object.keys(graph).length;
+
+      let edges = 0;
+
+      for (const node in graph) {
+        edges += graph[node].length;
+      }
+
+      document.getElementById("edgesCount").textContent =
+        edges;
+
+      renderMap();
+    }
+
+    init();
+
+  </script>
+
+</body>
+</html>
